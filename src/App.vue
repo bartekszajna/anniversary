@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 
 const currentStep = ref(0);
 
@@ -7,17 +7,45 @@ const isError = ref(false);
 
 const numberInput = ref(null);
 const addInput = ref(null);
-const wordInput = ref();
+const wordInput = ref(null);
 const correctWords = ['Rocznica', 'rocznica', 'Rocznica!', 'rocznica!'];
-const radioInput = ref();
-
+const radioInput = ref(null);
 const sudokuInputs = ref([]);
 
-function sudokuInputHandler(e, index) {
-  console.log(e.target.value);
-  sudokuInputs.value[index] = e.target.value;
+onMounted(() => {
+  currentStep.value = Number(sessionStorage.getItem('currentStep'));
 
-  console.log(sudokuInputs.value);
+  numberInput.value = Number(sessionStorage.getItem('numberInput')) || null;
+  addInput.value = Number(sessionStorage.getItem('addInput')) || null;
+  wordInput.value = sessionStorage.getItem('wordInput') || null;
+  radioInput.value = sessionStorage.getItem('radioInput') || null;
+
+  sudokuInputs.value = JSON.parse(sessionStorage.getItem('sudokuInputs')) || [];
+});
+
+watch(numberInput, () => {
+  sessionStorage.setItem('numberInput', numberInput.value);
+});
+watch(addInput, () => {
+  sessionStorage.setItem('addInput', addInput.value);
+});
+watch(wordInput, () => {
+  sessionStorage.setItem('wordInput', wordInput.value);
+});
+watch(radioInput, () => {
+  sessionStorage.setItem('radioInput', radioInput.value);
+});
+
+watch(
+  sudokuInputs,
+  () => {
+    sessionStorage.setItem('sudokuInputs', JSON.stringify(sudokuInputs.value));
+  },
+  { deep: true }
+);
+
+function sudokuInputHandler(e, index) {
+  sudokuInputs.value[index] = e.target.value;
 }
 
 const correctSudokuValues = [
@@ -32,6 +60,8 @@ let backLabel = 'Wstecz';
 let goLabel = 'Dalej';
 
 watch(currentStep, () => {
+  sessionStorage.setItem('currentStep', currentStep.value);
+
   if (currentStep.value === 4) {
     backLabel = 'Jeszcze szukam';
     goLabel = 'Mam';
@@ -59,7 +89,6 @@ watch(currentStep, () => {
   } else if (currentStep.value === 20) {
     isError.value = false;
   } else if (currentStep.value === 21) {
-    console.log(correctSudokuValues.join(''), sudokuInputs.value.join(''));
     if (correctSudokuValues.join('') !== sudokuInputs.value.join('')) {
       isError.value = true;
     }
